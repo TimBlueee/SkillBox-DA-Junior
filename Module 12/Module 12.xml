@@ -1,0 +1,90 @@
+1)SELECT products.product_name, COUNT(orders_product.product_id) AS order_count
+FROM orders_product
+JOIN products ON orders_product.product_id = products.product_id
+GROUP BY products.product_name
+ORDER BY order_count DESC
+LIMIT 1
+
+2)SELECT delivery_dt, COUNT(*) AS num_deliveries
+FROM info
+WHERE is_completed_flg = 'True'
+GROUP BY delivery_dt
+ORDER BY num_deliveries DESC
+LIMIT 1;       
+
+3)SELECT delivery_dt, COUNT(*) AS num_deliveries
+FROM info
+WHERE is_completed_flg = 'True'
+GROUP BY delivery_dt
+ORDER BY num_deliveries ASC
+LIMIT 1;
+
+4)SELECT device_name, AVG(DATEDIFF(finish_dttm, start_dttm)) AS avg_session_time_minutes
+FROM app_sess
+GROUP BY device_name;
+
+5)SELECT order_id, COUNT(DISTINCT product_id) AS unique_product_count
+FROM orders_product
+GROUP BY order_id
+ORDER BY unique_product_count DESC
+LIMIT 1;
+
+6)SELECT 
+    DATE_FORMAT(delivery_dt, '%Y-%m') AS month_year,
+    COUNT(*) AS incomplete_deliveries_count
+FROM info
+WHERE is_completed_flg = 'incomplete' AND delivery_dt >= '2022-01-01'
+GROUP BY month_year;
+
+7)SELECT 
+    YEAR(order_dt) AS order_year,
+    payment_method,
+    COUNT(*) AS order_count
+FROM orders
+GROUP BY order_year, payment_method
+ORDER BY order_year, payment_method;
+
+8)SELECT customer_id, COUNT(*) AS order_count
+FROM orders
+GROUP BY customer_id
+ORDER BY order_count DESC
+LIMIT 10;
+
+9)SELECT 
+    CASE 
+        WHEN timestampdiff(YEAR, CURDATE(), c.birth_dt) BETWEEN 18 AND 30 THEN 'Group 1'
+        WHEN timestampdiff(YEAR, CURDATE(), c.birth_dt) BETWEEN 31 AND 45 THEN 'Group 2'
+        WHEN timestampdiff(YEAR, CURDATE(), c.birth_dt) BETWEEN 46 AND 60 THEN 'Group 3'
+        WHEN timestampdiff(YEAR, CURDATE(), c.birth_dt) > 60 THEN 'Group 4'
+    END AS customer_group_name,
+    pr.product_group_name,
+    COUNT(pr.product_group_name) AS cnt
+FROM orders o
+JOIN customers c ON o.customer_id = c.customer_id
+JOIN orders_product od ON o.order_id = od.order_id
+JOIN products pr ON od.product_id = pr.product_id
+GROUP BY 
+    CASE 
+        WHEN timestampdiff(YEAR, CURDATE(), c.birth_dt) BETWEEN 18 AND 30 THEN 'Group 1'
+        WHEN timestampdiff(YEAR, CURDATE(), c.birth_dt) BETWEEN 31 AND 45 THEN 'Group 2'
+        WHEN timestampdiff(YEAR, CURDATE(), c.birth_dt) BETWEEN 46 AND 60 THEN 'Group 3'
+        WHEN timestampdiff(YEAR, CURDATE(), c.birth_dt) > 60 THEN 'Group 4'
+    END,
+    pr.product_group_name
+ORDER BY COUNT(pr.product_group_name) DESC;
+
+10)SELECT 
+    p.product_id,
+    COUNT(p.product_id)
+FROM orders_product op
+JOIN products p ON op.product_id = p.product_id
+JOIN (
+    SELECT op.order_id
+    FROM orders_product op
+    JOIN products p ON op.product_id = p.product_id
+    WHERE p.product_name = 'Носки' 
+) t ON op.order_id = t.order_id
+WHERE p.product_name <> 'Носки' 
+GROUP BY p.product_id
+ORDER BY COUNT(p.product_id) DESC
+LIMIT 1;
